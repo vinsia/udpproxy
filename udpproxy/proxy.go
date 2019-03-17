@@ -52,7 +52,7 @@ func (proxy *Proxy) Start() {
 	go proxy.proxy()
 }
 
-func (proxy *Proxy) listenServer(connection *ServerConnection) {
+func (proxy *Proxy) listenServer(connection Connection) {
 	for {
 		var data [MTU]byte
 		if n, err := connection.ReadFrom(data[:]); err == nil {
@@ -63,7 +63,7 @@ func (proxy *Proxy) listenServer(connection *ServerConnection) {
 	}
 }
 
-func (proxy *Proxy) listenClient(connection *ClientConnection) {
+func (proxy *Proxy) listenClient(connection Connection) {
 	for {
 		var data [MTU]byte
 		if n, err := connection.ReadFrom(data[:]); err == nil {
