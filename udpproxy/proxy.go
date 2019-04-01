@@ -6,34 +6,34 @@ import (
 )
 
 type Proxy struct {
-	ServerPorts       []int
-	ClientPorts       []int
+	Servers []string
+	Clients []string
 	ServerChannel     chan []byte
 	ClientChannel     chan []byte
 	ServerConnections []*ServerConnection
 	ClientConnections []*ClientConnection
 }
 
-func NewProxy(serverPort []int, clientPort []int) *Proxy {
+func NewProxy(servers []string, clients []string) *Proxy {
 	return &Proxy{
-		ServerPorts: serverPort, ClientPorts: clientPort,
+		Servers: servers, Clients: clients,
 		ServerChannel: make(chan []byte, UDPBuffer), ClientChannel: make(chan []byte, UDPBuffer),
-		ServerConnections: make([]*ServerConnection, 0, len(serverPort)),
-		ClientConnections: make([]*ClientConnection, 0, len(clientPort)),
+		ServerConnections: make([]*ServerConnection, 0, len(servers)),
+		ClientConnections: make([]*ClientConnection, 0, len(clients)),
 	}
 }
 
 func (proxy *Proxy) Init() {
-	for _, port := range proxy.ServerPorts {
-		connection := NewServerConnection(port)
+	for _, address := range proxy.Servers {
+		connection := NewServerConnection(ParseAddress(address))
 		if err := connection.Listen(); err != nil {
 			log.Fatalf("Can not listen port: %d", connection.Port)
 		}
 		proxy.ServerConnections = append(proxy.ServerConnections, connection)
 	}
 
-	for _, port := range proxy.ClientPorts {
-		connection := NewClientConnection(port)
+	for _, address := range proxy.Clients {
+		connection := NewClientConnection(ParseAddress(address))
 		if err := connection.Connect(); err != nil {
 			log.Fatalf("Can not connect to port: %d", connection.Port)
 		}

@@ -11,13 +11,13 @@ import (
 func initFlags() (app *cli.App) {
 	app = cli.NewApp()
 	app.Flags = []cli.Flag{
-		cli.IntSliceFlag{
-			Name:  "server_port, s",
-			Usage: "listening port",
+		cli.StringSliceFlag{
+			Name:  "server, s",
+			Usage: "server address",
 		},
-		cli.IntSliceFlag{
-			Name:  "client_port, c",
-			Usage: "connecting port",
+		cli.StringSliceFlag{
+			Name:  "client, c",
+			Usage: "client address",
 		},
 		cli.StringFlag{
 			Name:  "mode, m",
@@ -36,7 +36,7 @@ func main() {
 	app := initFlags()
 	app.Action = func(context *cli.Context) (err error) {
 		log.SetLevel(log.Level(context.Int("log_level")))
-		proxy := udpproxy.NewProxy(context.IntSlice("server_port"), context.IntSlice("client_port"))
+		proxy := udpproxy.NewProxy(context.StringSlice("server"), context.StringSlice("client"))
 		proxy.Init()
 		proxy.Start()
 		for {

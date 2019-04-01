@@ -13,18 +13,19 @@ type Connection interface {
 
 type ServerConnection struct {
 	Connection
+	Host string
 	Port int
 	Addr *net.UDPAddr
 	Socket *net.UDPConn
 }
 
-func NewServerConnection(port int) *ServerConnection {
-	return &ServerConnection{Port: port}
+func NewServerConnection(host string, port int) *ServerConnection {
+	return &ServerConnection{Host: host, Port: port}
 }
 
 func (conn *ServerConnection) Listen() (err error) {
-	log.Infof("start listening 127.0.0.1: %d", conn.Port)
-	addrStr := fmt.Sprintf("%s:%d", "127.0.0.1", conn.Port)
+	log.Infof("start listening %s: %d", conn.Host, conn.Port)
+	addrStr := fmt.Sprintf("%s:%d", conn.Host, conn.Port)
 	addr, err := net.ResolveUDPAddr(UDPProtocol, addrStr)
 	if err != nil {
 		log.Fatalf("Can not listen: %e", err)
@@ -60,17 +61,18 @@ func (conn *ServerConnection) ReadFrom(data []byte) (n int, err error) {
 
 type ClientConnection struct{
 	Connection
+	Host string
 	Port int
 	Socket *net.UDPConn
 }
 
-func NewClientConnection(port int) *ClientConnection {
-	return &ClientConnection{Port:port}
+func NewClientConnection(host string, port int) *ClientConnection {
+	return &ClientConnection{Host: host, Port:port}
 }
 
 func (conn *ClientConnection) Connect() (err error) {
-	log.Printf("starting connect to :%d", conn.Port)
-	addrStr := fmt.Sprintf("127.0.0.1:%d", conn.Port)
+	log.Printf("starting connect to %s:%d", conn.Host, conn.Port)
+	addrStr := fmt.Sprintf("%s:%d", conn.Host, conn.Port)
 	addr, err := net.ResolveUDPAddr(UDPProtocol, addrStr)
 	if err != nil {
 		log.Fatalf("Can not connect to server: %e", err)
