@@ -2,7 +2,7 @@ package udpproxy
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net"
 )
 
@@ -23,17 +23,17 @@ func NewServerConnection(port int) *ServerConnection {
 }
 
 func (conn *ServerConnection) Listen() (err error) {
-	log.Printf("start listening 127.0.0.1: %d", conn.Port)
+	log.Infof("start listening 127.0.0.1: %d", conn.Port)
 	addrStr := fmt.Sprintf("%s:%d", "127.0.0.1", conn.Port)
 	addr, err := net.ResolveUDPAddr(UDPProtocol, addrStr)
 	if err != nil {
-		log.Panicf("can not listen: %e", err)
+		log.Fatalf("Can not listen: %e", err)
 		return
 	}
 
 	socket, err := net.ListenUDP(UDPProtocol, addr)
 	if err != nil {
-		log.Panicf("can not listen: %e", err)
+		log.Fatalf("Can not listen: %e", err)
 		return
 	}
 	conn.Socket = socket
@@ -42,14 +42,20 @@ func (conn *ServerConnection) Listen() (err error) {
 
 func (conn *ServerConnection) SendTo(data []byte) (n int, err error) {
 	if conn.Addr != nil {
-		return conn.Socket.WriteToUDP(data, conn.Addr)
+		if n, err = conn.Socket.WriteToUDP(data, conn.Addr); err != nil {
+			log.Fatalf("Failed to send data to %d", conn.Port)
+		}
+		log.Debugf("Send data to %d", conn.Port)
 	}
 	return 0, nil
 }
 
 func (conn *ServerConnection) ReadFrom(data []byte) (n int, err error) {
-	n, conn.Addr, err = conn.Socket.ReadFromUDP(data)
-	return
+	if n, conn.Addr, err = conn.Socket.ReadFromUDP(data); err != nil {
+		log.Fatalf("Failed to read from %d", conn.Port)
+	}
+	log.Debugf("Read data from %d", conn.Port)
+	return n, err
 }
 
 type ClientConnection struct{
@@ -67,13 +73,13 @@ func (conn *ClientConnection) Connect() (err error) {
 	addrStr := fmt.Sprintf("127.0.0.1:%d", conn.Port)
 	addr, err := net.ResolveUDPAddr(UDPProtocol, addrStr)
 	if err != nil {
-		log.Panicf("can not connect to server: %e", err)
+		log.Fatalf("Can not connect to server: %e", err)
 		return
 	}
 
 	socket, err := net.DialUDP(UDPProtocol, nil, addr)
 	if err != nil {
-		log.Panicf("can not connect to server: %e", err)
+		log.Fatalf("Can not connect to server: %e", err)
 		return
 	}
 	conn.Socket = socket
@@ -81,9 +87,11 @@ func (conn *ClientConnection) Connect() (err error) {
 }
 
 func (conn *ClientConnection) SendTo(data []byte) (n int, err error) {
+	log.Debugf("Send data to %d", conn.Port)
 	return conn.Socket.Write(data)
 }
 
 func (conn *ClientConnection) ReadFrom(data []byte) (n int, err error) {
+	log.Debugf("Read data from %d", conn.Port)
 	return conn.Socket.Read(data)
 }
